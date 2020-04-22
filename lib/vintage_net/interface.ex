@@ -479,7 +479,7 @@ defmodule VintageNet.Interface do
 
     data = %{data | config: new_config, next_config: nil}
 
-    if interface_available?(data) do
+    if interfaces_available?(data) do
       start_configuring(new_config, data, [])
     else
       {new_data, actions} = reply_to_waiters(data)
@@ -504,7 +504,7 @@ defmodule VintageNet.Interface do
 
     data = %{data | config: new_config, next_config: nil}
 
-    if interface_available?(data) do
+    if interfaces_available?(data) do
       start_configuring(new_config, data, [])
     else
       {new_data, actions} = reply_to_waiters(data)
@@ -528,7 +528,7 @@ defmodule VintageNet.Interface do
     CommandRunner.remove_files(old_config.files)
     data = %{data | config: new_config, next_config: nil}
 
-    if interface_available?(data) do
+    if interfaces_available?(data) do
       start_configuring(new_config, data, [])
     else
       {new_data, actions} = reply_to_waiters(data)
@@ -553,7 +553,7 @@ defmodule VintageNet.Interface do
 
     data = %{data | config: new_config, next_config: nil}
 
-    if interface_available?(data) do
+    if interfaces_available?(data) do
       start_configuring(new_config, data, [])
     else
       {new_data, actions} = reply_to_waiters(data)
@@ -568,7 +568,7 @@ defmodule VintageNet.Interface do
 
   @impl true
   def handle_event(:state_timeout, _event, :retrying, %State{config: new_config} = data) do
-    if interface_available?(data) do
+    if interfaces_available?(data) do
       start_configuring(new_config, data, [])
     else
       {:keep_state, data, {:state_timeout, new_config.retry_millis, :retry_timeout}}
@@ -607,7 +607,7 @@ defmodule VintageNet.Interface do
     data = %{data | config: new_config}
     actions = [{:reply, from, :ok}]
 
-    if interface_available?(data) do
+    if interfaces_available?(data) do
       start_configuring(new_config, data, actions)
     else
       {:keep_state, data, [{:state_timeout, new_config.retry_millis, :retry_timeout} | actions]}
@@ -758,7 +758,11 @@ defmodule VintageNet.Interface do
     {%{data | inflight_ioctls: %{}}, actions}
   end
 
-  defp interface_available?(data) do
-    not data.config.require_interface or VintageNet.get(["interface", data.ifname, "present"])
+  defp interfaces_available?(data) do
+    Enum.all?(data.config.required_ifnames, &interface_available?/1)
+  end
+
+  defp interface_available?(ifname) when is_binary(ifname) do
+    VintageNet.get(["interface", ifname, "present"])
   end
 end

@@ -116,7 +116,7 @@ defmodule VintageNet.InterfaceTest do
 
       config = %{
         type: @interface_type,
-        require_interface: false,
+        required_ifnames: [],
         files: [{"testing", "Hello, world"}]
       }
 
